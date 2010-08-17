@@ -11,5 +11,6 @@ struct procfs_dir_entry
 /* A simple directory is built from a table of entries.  The table is
    terminated by a null NAME pointer.  */
 struct node *
-procfs_dir_make_node (const struct procfs_dir_entry *entries, void *dir_hook);
+procfs_dir_make_node (const struct procfs_dir_entry *entries,
+		      void *dir_hook, void (*cleanup) (void *dir_hook));
 
