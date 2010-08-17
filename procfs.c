@@ -36,6 +36,8 @@ struct node *procfs_make_node (const struct procfs_node_ops *ops, void *hook)
     }
 
   np->nn = nn;
+  memset (&np->nn_stat, 0, sizeof np->nn_stat);
+  np->nn_translated = 0;
 
   if (np->nn->ops->lookup)
     np->nn_stat.st_mode = S_IFDIR | 0555;
