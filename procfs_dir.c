@@ -77,7 +77,12 @@ procfs_dir_make_node (const struct procfs_dir_entry *entries,
 
   dn = malloc (sizeof *dn);
   if (! dn)
-    return NULL;
+    {
+      if (cleanup)
+	cleanup (dir_hook);
+
+      return NULL;
+    }
 
   dn->entries = entries;
   dn->hook = dir_hook;
