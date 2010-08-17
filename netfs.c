@@ -148,6 +148,7 @@ error_t netfs_attempt_lookup (struct iouser *user, struct node *dir,
 void netfs_node_norefs (struct node *np)
 {
   procfs_cleanup (np);
+  free (np);
 }
 
 
