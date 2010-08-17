@@ -32,6 +32,8 @@ struct procfs_node_ops
   void (*cleanup) (void *hook);
 };
 
+/* Create a new node and return it.  Returns NULL if it fails to allocate
+   enough memory.  In this case, ops->cleanup will be invoked.  */
 struct node *procfs_make_node (const struct procfs_node_ops *ops, void *hook);
 
 
