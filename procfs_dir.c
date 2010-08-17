@@ -86,6 +86,7 @@ procfs_dir_make_node (const struct procfs_dir_entry *entries,
 
   dn->entries = entries;
   dn->hook = dir_hook;
+  dn->cleanup = cleanup;
 
   return procfs_make_node (&ops, dn);
 }
