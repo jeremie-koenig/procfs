@@ -33,8 +33,12 @@ error_t netfs_attempt_read (struct iouser *cred, struct node *np,
 {
   char *contents;
   size_t contents_len;
+  error_t err;
 
-  procfs_get_contents (np, (void **) &contents, &contents_len);
+  err = procfs_get_contents (np, (void **) &contents, &contents_len);
+  if (err)
+    return err;
+
   contents += offset;
   contents_len -= offset;
 
