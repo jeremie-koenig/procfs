@@ -14,12 +14,12 @@ struct procfs_node_ops
   void (*update_stat) (void *hook, io_statbuf_t *sb);
 
   /* Fetch the contents of a node.  A pointer to the contents should be
-     returned in *contents and their length in *CONTENTS_LEN.  The exact
-     nature of these data depends on the type of node, as specified by
-     the file mode after update_stat() above has been called: for
-     regular files they are what io_read() returns; for symlinks they
-     are the target of the link; for directories, an argz vector of the
-     names of all entries should be stored there.  */
+     returned in *CONTENTS and their length in *CONTENTS_LEN.  The exact
+     nature of these data depends on whether the node is a regular file,
+     symlink or directory, as determined by the file mode in
+     netnode->nn_stat.  For regular files and symlinks, they are what
+     you would expect; for directories, they are an argz vector of the
+     names of the entries.  */
   error_t (*get_contents) (void *hook, void **contents, size_t *contents_len);
   void (*cleanup_contents) (void *hook, void *contents, size_t contents_len);
 
