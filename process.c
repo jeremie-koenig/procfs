@@ -7,7 +7,7 @@
 struct process_node {
   process_t procserv;
   pid_t pid;
-  procinfo_t info;
+  struct procinfo *info;
   size_t info_sz;
 };
 
@@ -77,6 +77,7 @@ process_make_node (process_t procserv, pid_t pid, procinfo_t info, size_t sz)
     { NULL, }
   };
   struct process_node *pn;
+  struct node *np;
 
   assert (sz >= sizeof *info);
 
@@ -86,10 +87,13 @@ process_make_node (process_t procserv, pid_t pid, procinfo_t info, size_t sz)
 
   pn->procserv = procserv;
   pn->pid = pid;
-  pn->info = info;
+  pn->info = (struct procinfo *) info;
   pn->info_sz = sz;
 
-  return procfs_dir_make_node (entries, pn, process_cleanup);
+  np = procfs_dir_make_node (entries, pn, process_cleanup);
+  np->nn_stat.st_uid = pn->info->owner;
+
+  return np;
 }
 
 error_t
