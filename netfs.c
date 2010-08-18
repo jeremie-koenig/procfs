@@ -138,7 +138,7 @@ error_t netfs_attempt_lookup (struct iouser *user, struct node *dir,
 			      char *name, struct node **np)
 {
   error_t err;
-  
+
   err = procfs_lookup (dir, name, np);
   if (! err)
     mutex_lock (&(*np)->lock);
