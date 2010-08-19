@@ -7,8 +7,7 @@
 struct process_node {
   process_t procserv;
   pid_t pid;
-  struct procinfo *info;
-  size_t info_sz;
+  struct procinfo info;
 };
 
 
@@ -59,17 +58,8 @@ process_argz_make_node (void *dir_hook, void *entry_hook)
 }
 
 
-static void
-process_cleanup (void *hook)
-{
-  struct process_node *pn = hook;
-
-  vm_deallocate (mach_task_self (), (vm_address_t) pn->info, pn->info_sz);
-  free (pn);
-}
-
 static struct node *
-process_make_node (process_t procserv, pid_t pid, procinfo_t info, size_t sz)
+process_make_node (process_t procserv, pid_t pid, const struct procinfo *info)
 {
   static const struct procfs_dir_entry entries[] = {
     { "cmdline",	process_argz_make_node,		proc_getprocargs,	},
@@ -79,19 +69,16 @@ process_make_node (process_t procserv, pid_t pid, procinfo_t info, size_t sz)
   struct process_node *pn;
   struct node *np;
 
-  assert (sz >= sizeof *info);
-
   pn = malloc (sizeof *pn);
   if (! pn)
     return NULL;
 
   pn->procserv = procserv;
   pn->pid = pid;
-  pn->info = (struct procinfo *) info;
-  pn->info_sz = sz;
+  memcpy (&pn->info, info, sizeof pn->info);
 
-  np = procfs_dir_make_node (entries, pn, process_cleanup);
-  np->nn_stat.st_uid = pn->info->owner;
+  np = procfs_dir_make_node (entries, pn, free);
+  np->nn_stat.st_uid = pn->info.owner;
 
   return np;
 }
@@ -113,7 +100,10 @@ process_lookup_pid (process_t procserv, pid_t pid, struct node **np)
   if (err)
     return EIO;
 
-  *np = process_make_node (procserv, pid, info, info_sz);
+  assert (info_sz * sizeof *info >= sizeof (struct procinfo));
+  *np = process_make_node (procserv, pid, (struct procinfo *) info);
+  vm_deallocate (mach_task_self (), (vm_address_t) info, info_sz);
+
   if (! *np)
     return ENOMEM;
 
