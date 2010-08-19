@@ -18,20 +18,20 @@ struct process_node {
    use a function pointer as the procfs_dir "entry hook" to choose the
    call to use on a file by file basis.  */
 
-struct process_zone_node
+struct process_argz_node
 {
   struct process_node pn;
-  error_t (*getzone) (process_t, pid_t, void **, mach_msg_type_number_t *);
+  error_t (*getargz) (process_t, pid_t, void **, mach_msg_type_number_t *);
 };
 
 static error_t
-process_zone_get_contents (void *hook, void **contents, size_t *contents_len)
+process_argz_get_contents (void *hook, void **contents, size_t *contents_len)
 {
-  struct process_zone_node *pz = hook;
+  struct process_argz_node *pz = hook;
   error_t err;
 
   *contents_len = 0;
-  err = pz->getzone (pz->pn.procserv, pz->pn.pid, contents, contents_len);
+  err = pz->getargz (pz->pn.procserv, pz->pn.pid, contents, contents_len);
   if (err)
     return EIO;
 
@@ -39,21 +39,21 @@ process_zone_get_contents (void *hook, void **contents, size_t *contents_len)
 }
 
 static struct node *
-process_zone_make_node (void *dir_hook, void *entry_hook)
+process_argz_make_node (void *dir_hook, void *entry_hook)
 {
   static const struct procfs_node_ops ops = {
-    .get_contents = process_zone_get_contents,
+    .get_contents = process_argz_get_contents,
     .cleanup_contents = procfs_cleanup_contents_with_vm_deallocate,
     .cleanup = free,
   };
-  struct process_zone_node *zn;
+  struct process_argz_node *zn;
 
   zn = malloc (sizeof *zn);
   if (! zn)
     return NULL;
 
   memcpy (&zn->pn, dir_hook, sizeof zn->pn);
-  zn->getzone = entry_hook;
+  zn->getargz = entry_hook;
 
   return procfs_make_node (&ops, zn);
 }
@@ -72,8 +72,8 @@ static struct node *
 process_make_node (process_t procserv, pid_t pid, procinfo_t info, size_t sz)
 {
   static const struct procfs_dir_entry entries[] = {
-    { "cmdline",	process_zone_make_node,		proc_getprocargs,	},
-    { "environ",	process_zone_make_node,		proc_getprocenv,	},
+    { "cmdline",	process_argz_make_node,		proc_getprocargs,	},
+    { "environ",	process_argz_make_node,		proc_getprocenv,	},
     { NULL, }
   };
   struct process_node *pn;
