@@ -59,6 +59,40 @@ error_t netfs_attempt_readlink (struct iouser *user, struct node *np,
   return EIO;
 }
 
+/* Helper function for netfs_get_dirents() below.  CONTENTS is an argz
+   vector of directory entry names, as returned by procfs_get_contents().
+   Convert at most NENTRIES of them to dirent structures, put them in
+   DATA (if not NULL), write the number of entries processed in *AMT and
+   return the required/used space in DATACNT.  */
+static int putentries (char *contents, size_t contents_len, int nentries,
+		       char *data, mach_msg_type_number_t *datacnt)
+{
+  int i;
+
+  *datacnt = 0;
+  for (i = 0; contents_len && (nentries < 0 || i < nentries); i++)
+    {
+      int namlen = strlen (contents);
+      int reclen = sizeof (struct dirent) + namlen;
+
+      if (data)
+        {
+	  struct dirent *d = (struct dirent *) (data + *datacnt);
+	  d->d_fileno = 42; /* XXX */
+	  d->d_namlen = namlen;
+	  d->d_reclen = reclen;
+	  d->d_type = DT_UNKNOWN;
+	  strcpy (d->d_name, contents);
+	}
+
+      *datacnt += reclen;
+      contents += namlen + 1;
+      contents_len -= namlen + 1;
+    }
+
+  return i;
+}
+
 /* The user must define this function.  Fill the array *DATA of size
    BUFSIZE with up to NENTRIES dirents from DIR (which is locked)
    starting with entry ENTRY for user CRED.  The number of entries in
@@ -90,41 +124,18 @@ error_t netfs_get_dirents (struct iouser *cred, struct node *dir,
     }
 
   /* Allocate a buffer if necessary. */
-  assert (bufsize >= 0);
-  if (contents_len && bufsize == 0)
+  putentries (contents, contents_len, nentries, NULL, datacnt);
+  if (bufsize < *datacnt)
     {
-      bufsize = PAGE_SIZE;
-      *data = mmap (0, bufsize, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, 0, 0);
+      void *n = mmap (0, *datacnt, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, 0, 0);
+      if (n == MAP_FAILED)
+	return ENOMEM;
+
+      *data = n;
     }
 
-  *datacnt = 0;
-  for (*amt = 0; contents_len && (nentries < 0 || *amt < nentries); (*amt)++)
-    {
-      struct dirent *d;
-      int namlen = strlen (contents);
-      int reclen = sizeof (struct dirent) + namlen;
-
-      /* This is clumsy but should not happen too often. */
-      while (bufsize < *datacnt + reclen)
-        {
-	  void *n;
-	  n = mmap (0, bufsize*2, PROT_READ | PROT_WRITE, MAP_ANONYMOUS, 0, 0);
-	  memcpy (n, *data, bufsize);
-	  munmap (*data, bufsize);
-	  *data = n, bufsize *= 2;
-	}
-
-      d = (struct dirent *) (*data + *datacnt);
-      d->d_fileno = 42; /* XXX */
-      d->d_namlen = namlen;
-      d->d_reclen = reclen;
-      d->d_type = DT_UNKNOWN;
-      strcpy (d->d_name, contents);
-      *datacnt += reclen;
-
-      contents += namlen + 1;
-      contents_len -= namlen + 1;
-    }
+  /* Do the actual conversion. */
+  *amt = putentries (contents, contents_len, nentries, *data, datacnt);
 
   return 0;
 }
