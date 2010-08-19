@@ -10,9 +10,6 @@
    overridden in update_stat().  */
 struct procfs_node_ops
 {
-  /* Update the default values in *SB; called once at creation. */
-  void (*update_stat) (void *hook, io_statbuf_t *sb);
-
   /* Fetch the contents of a node.  A pointer to the contents should be
      returned in *CONTENTS and their length in *CONTENTS_LEN.  The exact
      nature of these data depends on whether the node is a regular file,

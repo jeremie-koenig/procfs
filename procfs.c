@@ -57,9 +57,6 @@ struct node *procfs_make_node (const struct procfs_node_ops *ops, void *hook)
   else
     np->nn_stat.st_mode = S_IFREG | 0444;
 
-  if (np->nn->ops->update_stat)
-    np->nn->ops->update_stat (np->nn->hook, &np->nn_stat);
-
   return np;
 
 fail:
