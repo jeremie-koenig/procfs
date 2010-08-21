@@ -138,7 +138,7 @@ process_file_get_contents (void *hook, void **contents, size_t *contents_len)
   if (err)
     return EIO;
   if ((proc_stat_flags (file->ps) & file->desc->needs) != file->desc->needs)
-    return EGRATUITOUS;
+    return EIO;
 
   *contents = file->desc->get_contents (file->ps, contents_len);
   if (! *contents)
