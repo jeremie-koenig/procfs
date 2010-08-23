@@ -69,7 +69,7 @@ proclist_create_node (process_t procserv, struct node **np)
     .get_contents = proclist_get_contents,
     .lookup = proclist_lookup,
     .cleanup_contents = procfs_cleanup_contents_with_free,
-    .cleanup = free,
+    .cleanup = (void (*)(void *)) ps_context_free,
     .enable_refresh_hack_and_break_readdir = 1,
   };
   struct ps_context *pc;
