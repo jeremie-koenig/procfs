@@ -157,9 +157,7 @@ process_file_gc_status (struct proc_stat *ps, size_t *len)
       "VmPeak:\t%8u kB\n"
       "VmRSS:\t%8u kB\n"
       "VmHWM:\t%8u kB\n" /* ie. resident peak */
-      "Threads:\t%u\n"
-      "voluntary_ctxt_switches:\t%u\n"
-      "nonvoluntary_ctxt_switches:\t%u\n",
+      "Threads:\t%u\n",
       proc_stat_args (ps),
       state_string (ps),
       proc_stat_pid (ps), /* XXX will need more work for threads */
@@ -173,9 +171,7 @@ process_file_gc_status (struct proc_stat *ps, size_t *len)
       tbi->virtual_size / 1024,
       tbi->resident_size / 1024,
       tbi->resident_size / 1024,
-      proc_stat_num_threads (ps),
-      0,
-      tbi->suspend_count);
+      proc_stat_num_threads (ps));
 
   return len >= 0 ? contents : NULL;
 }
