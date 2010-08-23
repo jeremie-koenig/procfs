@@ -82,7 +82,7 @@ error_t netfs_attempt_readlink (struct iouser *user, struct node *np,
   size_t contents_len;
   error_t err;
 
-  err = procfs_get_contents (np, &contents, &contents_len);
+  err = procfs_get_contents (np, (void **) &contents, &contents_len);
   if (err)
     return err;
 
