@@ -1,1 +1,14 @@
-* Threads in /proc/[pid]/task/[n]
+* Fix the remaining quirks: owner of anonymous processes as INT_MAX (in
+  libps?), start time.
+
+* Try to limit dynamic (de)allocation in most cases while keeping the inner
+  interface simple and sticking to correct read(dir) semantics. For instance
+  add an (optional) "needed_length" field to procfs_node_ops, and arrange to
+  pass a sufficent buffer in (*contents, *contents_len) when get_contents is
+  called.
+
+* Threads in /proc/[pid]/task/[n]: shouldn't be too hard, by reinstanciating
+  "process" nodes for tasks, and providing an "exists" hook for the "task"
+  entry itself so that it's disabled in threads. Might require support for
+  missing libps flags, though.
+
